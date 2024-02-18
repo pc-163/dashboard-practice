@@ -1,50 +1,55 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
-const AddProduct = () => {
+const UpdateProduct = () => {
     const [productName, setName] = useState('');
     const [price, setPrice] = useState('');
     const [category, setCategory] = useState('');
     const [userId, setuserId] = useState('');
     const [company, setCompany] = useState('');
+
+    const params = useParams();
     const navigate = useNavigate();
 
-    const addProduct = async (e) => {
-        e.preventDefault();
-        const getId = JSON.parse(localStorage.getItem('usersignup'))._id;
-        
-        if (productName && price && category && userId && company != 0) {
-            try {
-                const response = await fetch("http://localhost:1234/add-product", {
-                    method: "POST",
-                    body: JSON.stringify({ productName, price, category, userId, company }),
-                    headers: {
-                        "Content-Type": "application/json",
-                        authorization: `bearer ${JSON.parse(localStorage.getItem('token'))}`
-                    },
-                });
+    useEffect(() => {
+        getProductDetails();
+    }, [])
 
-                const productResult = await response.json();
-                navigate("/");
-
-            } catch {
-                console.error("Error");
+    const getProductDetails = async () => {
+        let api = await fetch(`http://localhost:1234/product/${params.id}`, {
+            headers: {
+                authorization: `bearer ${JSON.parse(localStorage.getItem('token'))}`
             }
-            setName('');
-            setPrice('');
-            setCategory('');
-            setuserId('');
-            setCompany('');
+        });
+        api = await api.json();
 
-        } else {
-            alert("Add Product Details");
-        }
-
-
+        setName(api.productName);
+        setPrice(api.price.toString());
+        setCategory(api.category);
+        setuserId(api.userId);
+        setCompany(api.company);
     }
+
+    const updateOldProduct = async (e) => {
+        e.preventDefault();
+
+        const response = await fetch(`http://localhost:1234/product/${params.id}`, {
+            method: "PUT",
+            body: JSON.stringify({ productName, price, category, userId, company }),
+            headers: {
+                "Content-Type": "application/json",
+                authorization: `bearer ${JSON.parse(localStorage.getItem('token'))}`
+            },
+        });
+
+        const productResult = await response.json();
+        navigate("/");
+    };
+
+
     return (
         <>
-            <h1 className="mb-4 text-2xl font-extrabold leading-none tracking-tight text-center mt-5 mb-5 pb-5 text-gray-900 md:text-4xl lg:text-4xl dark:text-white">Add New Product Here</h1>
+            <h1 className="mb-4 text-2xl font-extrabold leading-none tracking-tight text-center mt-5 mb-5 pb-5 text-gray-900 md:text-4xl lg:text-4xl dark:text-white">Update Product</h1>
             <form className="max-w-md mx-auto">
                 <div className="relative z-0 w-full mb-5 group">
                     <input type="text" value={productName} onChange={e => setName(e.target.value)} id="floating_product_name" className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required />
@@ -72,11 +77,12 @@ const AddProduct = () => {
                     // </div>
                 }
 
-
-                <button type="submit" onClick={addProduct} className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Add Product</button>
+                <button type="submit" onClick={updateOldProduct} className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Update Product</button>
             </form>
+
+
         </>
     )
 }
 
-export default AddProduct
+export default UpdateProduct
